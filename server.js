@@ -53,7 +53,7 @@ app.use('/api/hr', require('./routes/hr'));
 app.use('/api/employee', require('./routes/employee'));
 
 // Basic health check route
-app.get('/api/status', (req, res) => {
+app.get('/', (req, res) => {
   res.status(200).json({ status: 'UP', service: 'SAP-HRMS-Backend' });
 });
 
