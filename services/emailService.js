@@ -16,8 +16,8 @@ const transporter = nodemailer.createTransport({
  * or fallback to Nodemailer SMTP.
  */
 const sendEmail = async ({ to, toName, subject, html }) => {
-  // 1. Try Brevo API (recommended for free tier, custom domains not strictly required)
-  if (process.env.BREVO_API_KEY) {
+  // 1. Try Brevo API (requires key starting with xkeysib-)
+  if (process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.startsWith('xkeysib-')) {
     console.log('Sending email via Brevo HTTP API...');
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
@@ -43,8 +43,8 @@ const sendEmail = async ({ to, toName, subject, html }) => {
     return true;
   }
 
-  // 2. Try Resend API
-  if (process.env.RESEND_API_KEY) {
+  // 2. Try Resend API (requires key starting with re_)
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith('re_')) {
     console.log('Sending email via Resend HTTP API...');
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
