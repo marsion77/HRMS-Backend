@@ -5,8 +5,83 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,   // 10 seconds
+  socketTimeout: 15000      // 15 seconds
 });
+
+/**
+ * Helper to send email using either HTTP APIs (Brevo / Resend) if configured,
+ * or fallback to Nodemailer SMTP.
+ */
+const sendEmail = async ({ to, toName, subject, html }) => {
+  // 1. Try Brevo API (recommended for free tier, custom domains not strictly required)
+  if (process.env.BREVO_API_KEY) {
+    console.log('Sending email via Brevo HTTP API...');
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: 'SAP HRMS Admin', email: process.env.EMAIL_USER },
+        to: [{ email: to, name: toName || to }],
+        subject: subject,
+        htmlContent: html
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Brevo API error: ${response.status}`);
+    }
+    const result = await response.json();
+    console.log(`Email successfully sent via Brevo to ${to}. MessageId: ${result.messageId}`);
+    return true;
+  }
+
+  // 2. Try Resend API
+  if (process.env.RESEND_API_KEY) {
+    console.log('Sending email via Resend HTTP API...');
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+      },
+      body: JSON.stringify({
+        from: `SAP HRMS Admin <${process.env.EMAIL_USER || 'onboarding@resend.dev'}>`,
+        to: [to],
+        subject: subject,
+        html: html
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Resend API error: ${response.status}`);
+    }
+    const result = await response.json();
+    console.log(`Email successfully sent via Resend to ${to}. Id: ${result.id}`);
+    return true;
+  }
+
+  // 3. Fallback to standard Nodemailer SMTP (works locally)
+  console.log('Sending email via Nodemailer SMTP...');
+  const mailOptions = {
+    from: `"SAP HRMS Admin" <${process.env.EMAIL_USER}>`,
+    to: to,
+    subject: subject,
+    html: html
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`Email successfully sent via SMTP to ${to}. MessageId: ${info.messageId}`);
+  return true;
+};
 
 /**
  * Sends an activation link to the newly created user (HR or Employee)
@@ -19,11 +94,8 @@ const sendActivationEmail = async (email, name, role, token) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const activationLink = `${frontendUrl}/activate/${token}`;
   
-  const mailOptions = {
-    from: `"SAP HRMS Admin" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: 'Welcome to SAP HRMS - Activate Your Account',
-    html: `
+  const subject = 'Welcome to SAP HRMS - Activate Your Account';
+  const html = `
       <div style="font-family: 'Inter', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; border: 2px solid #1e293b; background-color: #ffffff; color: #0f172a;">
         <h2 style="font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; color: #0f172a;">
           SAP HRMS INVITATION
@@ -51,12 +123,10 @@ const sendActivationEmail = async (email, name, role, token) => {
           This link will expire in 24 hours. If you did not expect this email, you can safely ignore it.
         </p>
       </div>
-    `
-  };
+    `;
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Activation email successfully sent to ${email}. MessageId: ${info.messageId}`);
+    await sendEmail({ to: email, toName: name, subject, html });
     return true;
   } catch (error) {
     console.error(`Failed to send activation email to ${email}:`, error);
