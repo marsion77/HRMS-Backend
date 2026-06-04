@@ -14,7 +14,8 @@ app.use(cors({
   origin: '*', // Dynamic CORS support for frontend/backend cross-origin hosting
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Seeding Super Admin on startup
 const seedSuperAdmin = async () => {

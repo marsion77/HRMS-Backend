@@ -4,7 +4,8 @@ const {
   getTodayAttendance,
   toggleAttendance,
   applyForLeave,
-  getMyLeaves
+  getMyLeaves,
+  uploadProfileImage
 } = require('../controllers/employeeController');
 const { protect, checkRole } = require('../middleware/auth');
 
@@ -16,5 +17,6 @@ router.get('/attendance/today', getTodayAttendance);
 router.post('/attendance/toggle', toggleAttendance);
 router.post('/leave', applyForLeave);
 router.get('/leaves', getMyLeaves);
+router.put('/profile-image', uploadProfileImage);
 
 module.exports = router;

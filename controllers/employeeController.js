@@ -149,9 +149,53 @@ const getMyLeaves = async (req, res) => {
   }
 };
 
+/**
+ * Upload or update employee's profile picture
+ * PUT /api/employee/profile-image
+ */
+const uploadProfileImage = async (req, res) => {
+  const { profileImage } = req.body;
+  
+  if (!profileImage) {
+    return res.status(400).json({ success: false, message: 'Please provide a profile image.' });
+  }
+
+  if (!profileImage.startsWith('data:image/')) {
+    return res.status(400).json({ success: false, message: 'Invalid image format. Must be a base64 data URI.' });
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    user.profileImage = profileImage;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully!',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        profileImage: user.profileImage,
+        leaveAllocations: user.leaveAllocations,
+        leaveUsed: user.leaveUsed
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getTodayAttendance,
   toggleAttendance,
   applyForLeave,
-  getMyLeaves
+  getMyLeaves,
+  uploadProfileImage
 };
