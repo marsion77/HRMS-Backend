@@ -25,7 +25,7 @@ const seedSuperAdmin = async () => {
       console.log('No Super Admin found. Seeding default Super Admin account...');
       const superAdmin = new User({
         name: 'Super Admin',
-        email: 'superadmin@sap.com',
+        email: 'superadmin@apex-hrms.com',
         password: 'SuperAdminSecure123!', // Automatically hashed by Mongoose pre-save middleware
         role: 'Super Admin',
         status: 'Active'
@@ -33,7 +33,7 @@ const seedSuperAdmin = async () => {
       await superAdmin.save();
       console.log('=================================================');
       console.log('Super Admin Seeded Successfully!');
-      console.log('Email: superadmin@sap.com');
+      console.log('Email: superadmin@apex-hrms.com');
       console.log('Password: SuperAdminSecure123!');
       console.log('=================================================');
     } else {
@@ -55,7 +55,7 @@ app.use('/api/employee', require('./routes/employee'));
 
 // Basic health check route
 app.get('/', (req, res) => {
-  res.status(200).json({ status: 'UP', service: 'SAP-HRMS-Backend' });
+  res.status(200).json({ status: 'UP', service: 'Apex-HRMS-Backend' });
 });
 
 // Global error handler

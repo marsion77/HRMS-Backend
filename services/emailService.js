@@ -27,7 +27,7 @@ const sendEmail = async ({ to, toName, subject, html }) => {
         'content-type': 'application/json'
       },
       body: JSON.stringify({
-        sender: { name: 'SAP HRMS Admin', email: process.env.EMAIL_USER },
+        sender: { name: 'Apex HRMS Admin', email: process.env.EMAIL_USER },
         to: [{ email: to, name: toName || to }],
         subject: subject,
         htmlContent: html
@@ -53,7 +53,7 @@ const sendEmail = async ({ to, toName, subject, html }) => {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: `SAP HRMS Admin <${process.env.EMAIL_USER || 'onboarding@resend.dev'}>`,
+        from: `Apex HRMS Admin <${process.env.EMAIL_USER || 'onboarding@resend.dev'}>`,
         to: [to],
         subject: subject,
         html: html
@@ -72,7 +72,7 @@ const sendEmail = async ({ to, toName, subject, html }) => {
   // 3. Fallback to standard Nodemailer SMTP (works locally)
   console.log('Sending email via Nodemailer SMTP...');
   const mailOptions = {
-    from: `"SAP HRMS Admin" <${process.env.EMAIL_USER}>`,
+    from: `"Apex HRMS Admin" <${process.env.EMAIL_USER}>`,
     to: to,
     subject: subject,
     html: html
@@ -94,17 +94,17 @@ const sendActivationEmail = async (email, name, role, token) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const activationLink = `${frontendUrl}/activate/${token}`;
   
-  const subject = 'Welcome to SAP HRMS - Activate Your Account';
+  const subject = 'Welcome to Apex HRMS - Activate Your Account';
   const html = `
       <div style="font-family: 'Inter', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; border: 2px solid #1e293b; background-color: #ffffff; color: #0f172a;">
         <h2 style="font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 20px; color: #0f172a;">
-          SAP HRMS INVITATION
+          Apex HRMS INVITATION
         </h2>
         <p style="font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
           Hello <strong>${name}</strong>,
         </p>
         <p style="font-size: 16px; line-height: 1.5; margin-bottom: 25px;">
-          You have been registered as an <strong>${role}</strong> in the SAP Human Resource Management System. 
+          You have been registered as an <strong>${role}</strong> in the Apex Human Resource Management System. 
           Please click the button below to set your password and activate your account.
         </p>
         <div style="margin: 30px 0;">
