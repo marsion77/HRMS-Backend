@@ -33,17 +33,12 @@ const inviteHR = async (req, res) => {
 
     await hrUser.save();
 
-    try {
-      await sendActivationEmail(email, name, 'HR', activationToken);
-    } catch (emailError) {
-      console.error('Nodemailer Error: Failed to send HR invitation email:', emailError.message);
-      // Rollback DB creation so they can try again
+    sendActivationEmail(email, name, 'HR', activationToken).catch(async (emailError) => {
+      console.error('Nodemailer Error: Failed to send HR invitation email in background:', emailError.message);
+      // We could optionally rollback DB creation, but usually we let the admin resend the invite.
+      // For now, keeping the fallback rollback pattern but running it asynchronously.
       await User.findByIdAndDelete(hrUser._id);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Could not send activation email. HR invitation cancelled.' 
-      });
-    }
+    });
 
     res.status(201).json({
       success: true,

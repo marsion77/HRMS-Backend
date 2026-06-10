@@ -96,7 +96,7 @@ const updateLeaveAllocation = async (req, res) => {
  */
 const getAllEmployees = async (req, res) => {
   try {
-    const employees = await User.find({ role: 'Employee' }).select('-password');
+    const employees = await User.find({ role: 'Employee' }).select('-password').lean();
     res.status(200).json({ success: true, employees });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -112,10 +112,10 @@ const getLiveAttendance = async (req, res) => {
     const todayStr = getLocalDateString(new Date());
     
     // Get all active Employees
-    const employees = await User.find({ role: 'Employee', status: 'Active' }).select('name email');
+    const employees = await User.find({ role: 'Employee', status: 'Active' }).select('name email').lean();
     
     // Get all attendance logs for today
-    const attendanceLogs = await Attendance.find({ date: todayStr });
+    const attendanceLogs = await Attendance.find({ date: todayStr }).lean();
 
     // Map logs by user id
     const logsMap = {};
@@ -150,7 +150,9 @@ const getAllLeaveRequests = async (req, res) => {
   try {
     const leaves = await Leave.find()
       .populate('userId', 'name email leaveAllocations leaveUsed')
-      .sort({ appliedAt: -1 });
+      .sort({ appliedAt: -1 })
+      .limit(100)
+      .lean();
     res.status(200).json({ success: true, leaves });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -218,16 +220,16 @@ const handleLeaveRequest = async (req, res) => {
  */
 const getEmployeeProfile = async (req, res) => {
   try {
-    const employee = await User.findOne({ _id: req.params.id, role: 'Employee' }).select('-password');
+    const employee = await User.findOne({ _id: req.params.id, role: 'Employee' }).select('-password').lean();
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee not found' });
     }
 
     const todayStr = getLocalDateString(new Date());
-    const todayLog = await Attendance.findOne({ userId: employee._id, date: todayStr });
+    const todayLog = await Attendance.findOne({ userId: employee._id, date: todayStr }).lean();
 
     // All approved leaves
-    const approvedLeaves = await Leave.find({ userId: employee._id, status: 'Approved' });
+    const approvedLeaves = await Leave.find({ userId: employee._id, status: 'Approved' }).lean();
 
     res.status(200).json({
       success: true,
@@ -260,7 +262,7 @@ const getEmployeeMonthlyAttendance = async (req, res) => {
     const logs = await Attendance.find({
       userId: req.params.id,
       date: { $gte: startDate, $lte: endDate }
-    }).sort({ date: 1 });
+    }).sort({ date: 1 }).lean();
 
     res.status(200).json({
       success: true,
