@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      dbName: 'HRMS'
+      dbName: 'HRMS',
+      maxPoolSize: 10
     });
     console.log(`MongoDB Connected: ${conn.connection.host}, DB Name: ${conn.connection.name}`);
   } catch (error) {

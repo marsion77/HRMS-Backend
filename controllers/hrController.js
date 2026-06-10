@@ -46,21 +46,16 @@ const inviteEmployee = async (req, res) => {
 
     await employee.save();
 
-    try {
-      await sendActivationEmail(email, name, 'Employee', activationToken);
-    } catch (emailError) {
-      console.error('Nodemailer Error: Failed to send Employee invitation email:', emailError.message);
-      // Rollback database record
-      await User.findByIdAndDelete(employee._id);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Could not send activation email. Employee invitation cancelled.' 
-      });
-    }
+    // Send email asynchronously to avoid blocking the response
+    sendActivationEmail(email, name, 'Employee', activationToken).catch(emailError => {
+      console.error('Nodemailer Error: Failed to send Employee invitation email in background:', emailError.message);
+      // Note: We don't rollback here because the email could be resent later, 
+      // and we want the invite to feel instant.
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Employee invited successfully. Activation email sent.',
+      message: 'Employee invited successfully. Activation email is being sent in the background.',
       employee
     });
   } catch (error) {
